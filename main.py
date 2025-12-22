@@ -1,7 +1,6 @@
 from metrodashboard.api.train_positions import TrainPositions
 from metrodashboard.api.metro import MetroClient
 from dotenv import load_dotenv
-import os
 
 load_dotenv()
 def main():
@@ -13,5 +12,4 @@ def main():
 
 
 if __name__ == "__main__":
-    print(os.getenv('API_KEY'))
     main()
