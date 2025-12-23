@@ -4,7 +4,6 @@ import os
 
 class MetroClient:
     __WMATA_URL = "https://api.wmata.com"
-    __API_PRIMARY_KEY = os.getenv("API_KEY")
 
     def make_api_request(self, endpoint: str):
         request_url = f'{self.__WMATA_URL}/{endpoint}'
