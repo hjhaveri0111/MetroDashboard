@@ -11,3 +11,19 @@ class Station:
         self.name = raw_content['Name']
         self.station_together1 = raw_content['StationTogether1']
         self.station_together2 = raw_content['StationTogether2']
+    def __str__(self):
+        return (
+            f"Station("
+            f"address={self.address}, "
+            f"code={self.code}, "
+            f"lat={self.lat}, "
+            f"line_code1={self.line_code1}, "
+            f"line_code2={self.line_code2}, "
+            f"line_code3={self.line_code3}, "
+            f"line_code4={self.line_code4}, "
+            f"lon={self.lon}, "
+            f"name={self.name}, "
+            f"station_together1={self.station_together1}, "
+            f"station_together2={self.station_together2}"
+            f")"
+        )

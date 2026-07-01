@@ -15,5 +15,6 @@ class MetroClient:
             'api_key': os.getenv("API_KEY")
         }
 
-        response = requests.get(request_url,params=parameters, headers=headers)
+        response = requests.get(request_url, params=parameters, headers=headers)
+        response.raise_for_status()
         return json.loads(response.text)

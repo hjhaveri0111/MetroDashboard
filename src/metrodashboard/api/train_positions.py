@@ -1,5 +1,6 @@
 from metrodashboard.api.metro import MetroClient
 from metrodashboard.models.train_position import TrainPosition
+from metrodashboard.models.track_circuit import TrackCircuit
 
 class TrainPositions:
     __BASE_ENDPOINT = 'TrainPositions'
@@ -12,3 +13,7 @@ class TrainPositions:
         for raw_position_data in api_response['TrainPositions']:
             positions.append(TrainPosition(raw_position_data))
         return positions
+
+    def track_circuits(self) -> list[TrackCircuit]:
+        endpoint = f'{self.__BASE_ENDPOINT}/TrackCircuits'
+        return [TrackCircuit(circuit) for circuit in self.client.make_api_request(endpoint)['TrackCircuits']]

@@ -1,33 +1,73 @@
-import json
-import os
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from pydantic import BaseModel, ConfigDict
+from enum import Enum
+import asyncio
 
-from metrodashboard.api.train_positions import TrainPositions
 from metrodashboard.api.stations import Stations
 from metrodashboard.api.next_train import NextTrain
 from metrodashboard.api.metro import MetroClient
+from metrodashboard.poller.wmata_poller import WmataPoller
+from metrodashboard.services.station_predictions import StationPredictions
+from metrodashboard.services.stations_service import StationsService
 from dotenv import load_dotenv
-
 load_dotenv()
-def main():
-    print("Hello from metrodashboard!")
-    client = MetroClient()
-    positions = TrainPositions(client)
-    response = positions.get_all_train_positions()
-    next_train = NextTrain(client)
-    predictions = next_train.get_next_trains_for_station('Pentagon City')
-    for prediction in predictions: 
-        print(f'{prediction.destination}({prediction.destination_code}) coming in {prediction.min}')
+
+"""
+What are my customer access patterns
+
+Given a station name and a line, give me the station predictions
+
+I will resolve the backend for thi
+"""
+class Prediction(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    line: str
+    destination: str
+    car: str
+    min: str
+    group: str
+
+class Line(str, Enum):
+    blue = 'BL'
+    yellow = 'YL'
+    red = 'RD'
+    orange = 'OR'
+    silver = 'SV'
+    green = 'GR'
+
+client = MetroClient()
+stations_service = StationsService()
+next_train = NextTrain(client, stations_service)
+stations = Stations(client)
+predictions = StationPredictions(stations_service)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    poller = WmataPoller(next_train, interval_seconds=20)
+    asyncio.create_task(poller.run())
+    yield
     
-    if bool(os.getenv("REFRESH")):
-        refresh_station_codes()
+app = FastAPI(lifespan=lifespan)
 
-def refresh_station_codes(client: MetroClient):
-    stations = Stations(client)
-    all_stations = {station.name: station.code for station in stations.list_all_stations()}
-    with open('stations.json', 'w') as f:
-        json.dump(all_stations, f, indent=4) 
+@app.get("/")
+def landing_page():
+    return "Hello from Metro Dashboard"
 
+@app.get("/station/{station_name}")
+def get_station_predictions(station_name: str):
+    return {
+        "station": station_name,
+        "predictions": predictions.get_predictions_for_station(station_name)
+    }
 
-
-if __name__ == "__main__":
-    main()
+@app.get("/stations")
+def get_stations():
+    return [
+        {
+            "name": name,
+            "lines": list(lines.keys())
+        }
+        for name, lines in stations.list_all_stations_cached().items()
+    ]
