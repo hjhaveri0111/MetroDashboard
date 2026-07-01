@@ -21,8 +21,6 @@ class WmataPoller:
 
             grouped.setdefault(code, []).append(t)
 
-        for station in grouped:
-            grouped[station].sort(key=lambda x: x.min)
         return grouped
 
     async def run(self):
